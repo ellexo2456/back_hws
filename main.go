@@ -14,7 +14,7 @@ func main() {
 	var input_file *os.File
 	var output_file *os.File
 	var err error
-	params := os.Args[:1]
+	params := os.Args[1:]
 	switch len(params) {
 	case 1:
 		input_file, err = os.Open(params[0])
@@ -31,7 +31,7 @@ func main() {
 	}
 
 	var scanner *bufio.Scanner
-	if input_file == nil {
+	if input_file != nil {
 		scanner = bufio.NewScanner(input_file)
 	} else {
 		scanner = bufio.NewScanner(os.Stdin)
