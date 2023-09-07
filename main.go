@@ -21,7 +21,7 @@ func main() {
 		defer input_file.Close()
 	case 2:
 		input_file, err = os.Open(params[0])
-		output_file, err = os.Open(params[1])
+		output_file, err = os.Create(params[1])
 		defer input_file.Close()
 		defer output_file.Close()
 
@@ -41,13 +41,20 @@ func main() {
 	for scanner.Scan() {
 		input = append(input, scanner.Text())
 	}
-
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 
 	input = unique.Unique(input)
-	for _, i := range input {
-		fmt.Println(i)
+	var writer *bufio.Writer
+	if output_file != nil {
+		writer = bufio.NewWriter(output_file)
+	} else {
+		writer = bufio.NewWriter(os.Stdout)
 	}
+
+	for _, i := range input {
+		fmt.Fprintln(writer, i)
+	}
+	writer.Flush()
 }
