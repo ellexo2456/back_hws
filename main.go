@@ -2,19 +2,31 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"tp_go_course_second_sem_2023/unique"
 )
 
+type Options struct {
+	cFlag *bool
+}
+
 func main() {
-	//inpt := "I love music.\nI love music.\nI love music.\n\nI love music of Kartik.\nI love music of Kartik.\nThanks.\nI love music of Kartik.\nI love music of Kartik."
+	options := Options{
+		cFlag: flag.Bool("c", false, "help message for flag n"),
+	}
+
+	flag.Parse()
+	if *options.cFlag {
+		fmt.Println("egeoom")
+	}
 
 	var input_file *os.File
 	var output_file *os.File
 	var err error
-	params := os.Args[1:]
+	params := flag.Args()
 	switch len(params) {
 	case 1:
 		input_file, err = os.Open(params[0])
