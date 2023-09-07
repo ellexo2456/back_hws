@@ -1,12 +1,32 @@
 package unique
 
-func Unique(lines []string) []string {
-	var unique_lines []string
-	unique_lines = append(unique_lines, lines[0])
+import "strconv"
+
+type Options struct {
+	C *bool
+}
+
+func Unique(lines []string, options Options) []string {
+	uniqueLines := []string{lines[0]}
+	count := 1
+
 	for i, line := range lines[1:] {
+
 		if line != lines[i] {
-			unique_lines = append(unique_lines, line)
+			if *options.C {
+				uniqueLines[len(uniqueLines)-1] = strconv.Itoa(count) + " " + uniqueLines[len(uniqueLines)-1]
+				count = 1
+			}
+
+			uniqueLines = append(uniqueLines, line)
+			continue
 		}
+
+		count++
 	}
-	return unique_lines
+	if *options.C {
+		uniqueLines[len(uniqueLines)-1] = strconv.Itoa(count) + " " + uniqueLines[len(uniqueLines)-1]
+	}
+
+	return uniqueLines
 }
