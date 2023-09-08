@@ -21,9 +21,10 @@ func Unique(lines []string, options Options) []string {
 
 	uniqueLines := []string{lines[0]}
 	count := 1
-	//strings.Join(strings.Fields(lines[0])[1:], " ")
+
 	for i, line := range lines[1:] {
 		lineToCompare := line
+
 		if *options.I {
 			lineToCompare = strings.ToLower(lineToCompare)
 			lines[i] = strings.ToLower(lines[i])
@@ -42,6 +43,22 @@ func Unique(lines []string, options Options) []string {
 				lines[i] = ""
 			} else {
 				lines[i] = strings.Join(linesIFields[*options.F:], " ")
+			}
+		}
+		if *options.S != 0 {
+			lineToCompareRunes := []rune(lineToCompare)
+			linesIRunes := []rune(lines[i])
+
+			if *options.S > len(lineToCompareRunes) {
+				lineToCompare = ""
+			} else {
+				lineToCompare = string(lineToCompareRunes[*options.S:])
+			}
+
+			if *options.S > len(linesIRunes) {
+				lines[i] = ""
+			} else {
+				lines[i] = string(linesIRunes[*options.S:])
 			}
 		}
 
