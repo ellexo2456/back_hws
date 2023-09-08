@@ -1,20 +1,29 @@
 package unique
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 type Options struct {
 	C *bool
 	D *bool
 	U *bool
+	I *bool
+	F *int
+	S *int
 }
 
 func Unique(lines []string, options Options) []string {
+	if lines == nil {
+		return nil
+	}
+
 	uniqueLines := []string{lines[0]}
 	count := 1
 
 	for i, line := range lines[1:] {
-
-		if line != lines[i] {
+		if line != lines[i] && !*options.I || *options.I && strings.ToLower(line) != strings.ToLower(lines[i]) {
 			if *options.C {
 				uniqueLines[len(uniqueLines)-1] = strconv.Itoa(count) + " " + uniqueLines[len(uniqueLines)-1]
 			} else if *options.D {
