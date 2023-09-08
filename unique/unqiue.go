@@ -21,7 +21,7 @@ func Unique(lines []string, options Options) []string {
 
 	uniqueLines := []string{lines[0]}
 	count := 1
-
+	//strings.Join(strings.Fields(lines[0])[1:], " ")
 	for i, line := range lines[1:] {
 		if line != lines[i] && !*options.I || *options.I && strings.ToLower(line) != strings.ToLower(lines[i]) {
 			if *options.C {
