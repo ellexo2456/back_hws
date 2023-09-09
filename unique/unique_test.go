@@ -10,7 +10,7 @@ var tr = true
 var fls = false
 var zero = 0
 var one = 1
-var two = 1
+var two = 2
 var ten = 10
 var inputStrings = []string{
 	"I love music.",
@@ -160,7 +160,7 @@ var goodCases = map[string]struct {
 			"\n",
 			"I Love music of Kartik.",
 			"Thanks.",
-			"I love music of Kartik.",
+			"some love music of Kartik.",
 		},
 		options: Options{C: &fls, D: &fls, U: &fls, I: &fls, F: &one, S: &zero},
 	},
@@ -222,7 +222,7 @@ var goodCases = map[string]struct {
 			"I love music of Kartik.",
 		},
 		result: []string{
-			"\n",
+			"I love music.",
 		},
 		options: Options{C: &fls, D: &fls, U: &fls, I: &fls, F: &ten, S: &zero},
 	},
@@ -230,7 +230,7 @@ var goodCases = map[string]struct {
 		input: []string{
 			"Мне нравится музыка.",
 			"Им нравится музыка.",
-			"Ей нравится музыка.",
+			"те нравится музыка.",
 			"\n",
 			"π ≠ 3.14",
 			"å ≠ 3.14",

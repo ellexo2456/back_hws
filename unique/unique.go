@@ -41,6 +41,9 @@ func Unique(lines []string, options Options) ([]string, error) {
 		return nil, errors.New("You`re can`t use flags c,d and u together")
 	}
 
+	if len(lines) <= 1 {
+		return lines, nil
+	}
 	uniqueLines := []string{lines[0]}
 	count := 1
 
