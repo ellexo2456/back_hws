@@ -1,8 +1,11 @@
 package calc
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
-func getDeepestCols(expr string) string {
+func getDeepestNearestCols(expr string) string {
 	var startIndex int
 	if startIndex = strings.Index(expr, "("); startIndex == -1 {
 		return expr
@@ -18,7 +21,7 @@ func getDeepestCols(expr string) string {
 		}
 
 		if count == 0 {
-			return getDeepestCols(expr[startIndex:endIndex])
+			return getDeepestNearestCols(expr[startIndex+1 : endIndex+1])
 		}
 	}
 
@@ -27,15 +30,18 @@ func getDeepestCols(expr string) string {
 
 func Calc(expression string) float64 {
 
-	var result float64
+	//var result float64
 	currentExpr := expression
-	for currentExpr == "" {
+	for currentExpr != "" {
 		if strings.Contains(currentExpr, "(") {
-			currentExpr = getDeepestCols()
+			currentExpr = getDeepestNearestCols(currentExpr)
 		}
-		result += calculate(line)
-		input = input.replaceInColsWithResult()
+		fmt.Println(currentExpr)
+		return 4
+		//result += calculate(line)
+		//input = input.replaceInColsWithResult()
 
 	}
 
+	return 5
 }
