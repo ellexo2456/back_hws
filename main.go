@@ -9,19 +9,16 @@ import (
 	"tp_go_course_second_sem_2023/unique"
 )
 
-type Options struct {
-	cFlag *bool
-}
-
 func main() {
-	options := Options{
-		cFlag: flag.Bool("c", false, "help message for flag n"),
+	options := unique.Options{
+		C: flag.Bool("c", false, "count the number of line appearances"),
+		D: flag.Bool("d", false, "only duplicated"),
+		U: flag.Bool("u", false, "only unique"),
+		I: flag.Bool("i", false, "ignore case"),
+		F: flag.Int("f", 0, "ignore first num fields"),
+		S: flag.Int("s", 0, "ignore first num chars"),
 	}
-
 	flag.Parse()
-	if *options.cFlag {
-		fmt.Println("egeoom")
-	}
 
 	var input_file *os.File
 	var output_file *os.File
@@ -54,10 +51,14 @@ func main() {
 		input = append(input, scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+		log.Fatal(err)
 	}
 
-	input = unique.Unique(input)
+	input, err = unique.Unique(input, options)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var writer *bufio.Writer
 	if output_file != nil {
 		writer = bufio.NewWriter(output_file)

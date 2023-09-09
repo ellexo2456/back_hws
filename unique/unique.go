@@ -1,6 +1,7 @@
 package unique
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -14,9 +15,30 @@ type Options struct {
 	S *int
 }
 
-func Unique(lines []string, options Options) []string {
+func boolToInt(condition bool) int {
+	if condition {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+func Unique(lines []string, options Options) ([]string, error) {
 	if lines == nil {
-		return nil
+		return nil, errors.New("Empty input")
+	}
+	if options == (Options{}) {
+		return nil, errors.New("Empty options")
+	}
+
+	if *options.F < 0 {
+		return nil, errors.New("Flag f must be non-negative")
+	}
+	if *options.S < 0 {
+		return nil, errors.New("Flag s must be non-negative")
+	}
+	if (boolToInt(*options.C) + boolToInt(*options.D) + boolToInt(*options.U)) > 1 {
+		return nil, errors.New("You`re can`t use flags c,d and u together")
 	}
 
 	uniqueLines := []string{lines[0]}
@@ -96,5 +118,5 @@ func Unique(lines []string, options Options) []string {
 		}
 	}
 
-	return uniqueLines
+	return uniqueLines, nil
 }
