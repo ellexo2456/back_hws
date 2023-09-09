@@ -20,5 +20,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(calc.Calc(input))
+	var result float64
+	if result, err = calc.Calc(input); err != nil {
+		log.Fatal("Error: ", err)
+	}
+	fmt.Println(result)
 }

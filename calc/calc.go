@@ -1,14 +1,15 @@
 package calc
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
 
-func getDeepestNearestCols(expr string) string {
+func getDeepestNearestParenthesis(expr string) (string, error) {
 	var startIndex int
 	if startIndex = strings.Index(expr, "("); startIndex == -1 {
-		return expr
+		return expr, nil
 	}
 
 	count := 1
@@ -21,27 +22,30 @@ func getDeepestNearestCols(expr string) string {
 		}
 
 		if count == 0 {
-			return getDeepestNearestCols(expr[startIndex+1 : endIndex+1])
+			return getDeepestNearestParenthesis(expr[startIndex+1 : endIndex+1])
 		}
 	}
 
-	return expr
+	return expr, errors.New("incorrect count of parenthesis")
 }
 
-func Calc(expression string) float64 {
+func Calc(expression string) (float64, error) {
 
 	//var result float64
 	currentExpr := expression
+	var err error
 	for currentExpr != "" {
 		if strings.Contains(currentExpr, "(") {
-			currentExpr = getDeepestNearestCols(currentExpr)
+			if currentExpr, err = getDeepestNearestParenthesis(currentExpr); err != nil {
+				return 0, err
+			}
 		}
 		fmt.Println(currentExpr)
-		return 4
+		return 4, nil
 		//result += calculate(line)
 		//input = input.replaceInColsWithResult()
 
 	}
 
-	return 5
+	return 5, nil
 }
