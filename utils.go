@@ -1,9 +1,9 @@
 package main
 
 import (
+	"back_hws/unique"
 	"flag"
 	"os"
-	"tp_go_course_second_sem_2023/unique"
 )
 
 func OptionsInit() unique.Options {
