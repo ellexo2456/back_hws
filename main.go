@@ -10,47 +10,32 @@ import (
 )
 
 func main() {
-	options := unique.Options{
-		C: flag.Bool("c", false, "count the number of line appearances"),
-		D: flag.Bool("d", false, "only duplicated"),
-		U: flag.Bool("u", false, "only unique"),
-		I: flag.Bool("i", false, "ignore case"),
-		F: flag.Int("f", 0, "ignore first num fields"),
-		S: flag.Int("s", 0, "ignore first num chars"),
-	}
+	options := OptionsInit()
 	flag.Parse()
 
-	var input_file *os.File
-	var output_file *os.File
-	var err error
-	params := flag.Args()
-	switch len(params) {
-	case 1:
-		input_file, err = os.Open(params[0])
-		defer input_file.Close()
-	case 2:
-		input_file, err = os.Open(params[0])
-		output_file, err = os.Create(params[1])
-		defer input_file.Close()
-		defer output_file.Close()
+	inputFile, inputError, outputFile, outputError := FileInit()
 
+	if inputError != nil {
+		log.Fatal(inputError)
 	}
-	if err != nil {
-		log.Fatal(err)
+	if outputError != nil {
+		log.Fatal(outputError)
 	}
 
 	var scanner *bufio.Scanner
-	if input_file != nil {
-		scanner = bufio.NewScanner(input_file)
+	if inputFile != nil {
+		scanner = bufio.NewScanner(inputFile)
 	} else {
 		scanner = bufio.NewScanner(os.Stdin)
+		defer inputFile.Close()
 	}
 
 	var input []string
 	for scanner.Scan() {
 		input = append(input, scanner.Text())
 	}
-	if err := scanner.Err(); err != nil {
+	err := scanner.Err()
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -60,10 +45,11 @@ func main() {
 	}
 
 	var writer *bufio.Writer
-	if output_file != nil {
-		writer = bufio.NewWriter(output_file)
+	if outputFile != nil {
+		writer = bufio.NewWriter(outputFile)
 	} else {
 		writer = bufio.NewWriter(os.Stdout)
+		defer outputFile.Close()
 	}
 
 	for _, i := range input {
