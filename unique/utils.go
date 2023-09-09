@@ -6,15 +6,6 @@ import (
 	"strings"
 )
 
-type pair struct {
-	values, offset interface{}
-}
-
-type a struct {
-	values []string
-	offset int
-}
-
 func ArgumentsCheck(lines []string, options Options) ([]string, error) {
 	if lines == nil {
 		return nil, errors.New("Empty input")
@@ -53,44 +44,15 @@ func runeCutter(fields []rune, count int) string {
 }
 
 func PrepareToCompare(curLine string, prevLine string, options Options) (string, string) {
+
 	if *options.I {
-		return strings.ToLower(curLine), strings.ToLower(prevLine)
+		curLine, prevLine = strings.ToLower(curLine), strings.ToLower(prevLine)
 	}
 	if *options.F != 0 {
-		//lineToCompareFields := strings.Fields(curLine)
-		//linesIFields := strings.Fields(prevLine)
-		//
-		//if *options.F > len(lineToCompareFields) {
-		//	curLine = ""
-		//} else {
-		//	curLine = strings.Join(lineToCompareFields[*options.F:], " ")
-		//}
-		//
-		//if *options.F > len(linesIFields) {
-		//	prevLine = ""
-		//} else {
-		//	prevLine = strings.Join(linesIFields[*options.F:], " ")
-		//}
-		return fieldCutter(strings.Fields(curLine), *options.F), fieldCutter(strings.Fields(prevLine), *options.F)
+		curLine, prevLine = fieldCutter(strings.Fields(curLine), *options.F), fieldCutter(strings.Fields(prevLine), *options.F)
 	}
 	if *options.S != 0 {
-		//lineToCompareRunes := []rune(curLine)
-		//linesIRunes := []rune(prevLine)
-		//
-		//if *options.S > len(lineToCompareRunes) {
-		//	curLine = ""
-		//} else {
-		//	curLine = string(lineToCompareRunes[*options.S:])
-		//}
-		//
-		//if *options.S > len(linesIRunes) {
-		//	prevLine = ""
-		//} else {
-		//	prevLine = string(linesIRunes[*options.S:])
-		//}
-
-		return runeCutter([]rune(curLine), *options.F), runeCutter([]rune(curLine), *options.F)
-
+		curLine, prevLine = runeCutter([]rune(curLine), *options.S), runeCutter([]rune(prevLine), *options.S)
 	}
 
 	return curLine, prevLine
