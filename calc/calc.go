@@ -2,10 +2,10 @@ package calc
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 func getDeepestNearestParenthesis(expr string) (string, error) {
@@ -82,12 +82,11 @@ func makeOperation(left string, right string, operator string) (string, error) {
 	return strconv.FormatFloat(result, 'f', -1, 64), nil
 }
 
-func calculate(expr string) (float64, error) {
-	if len(expr) == 0 || len(expr) == 0 {
-		return strconv.ParseFloat(expr, 64)
+func calculate(expr string) (string, error) {
+	if len(expr) == 0 || len(expr) == 1 {
+		return expr, nil
 	}
 
-	var result float64
 	var memorizedNumber, memorizedOperator string
 	var curGetNumber, curGetOperator string
 	var curNumber string
@@ -101,10 +100,7 @@ func calculate(expr string) (float64, error) {
 		curNumber = "-" + curNumber
 
 		if operatorIndex == len(expr[1:]) {
-			if result, err = strconv.ParseFloat(curNumber, 64); err != nil {
-				return 0, nil
-			}
-			return result, nil
+			return curNumber, nil
 		}
 
 		curGetOperator = string(expr[operatorIndex+1])
@@ -113,10 +109,7 @@ func calculate(expr string) (float64, error) {
 		curNumber, operatorIndex = getNumber(expr)
 
 		if operatorIndex == len(expr) {
-			if result, err = strconv.ParseFloat(curNumber, 64); err != nil {
-				return 0, nil
-			}
-			return result, nil
+			return curNumber, nil
 		}
 
 		curGetOperator = string(expr[operatorIndex])
@@ -128,19 +121,16 @@ func calculate(expr string) (float64, error) {
 
 		if operatorIndex == len(expr) {
 			if curNumber, err = makeOperation(curNumber, curGetNumber, curGetOperator); err != nil {
-				return 0, err
+				return "", err
 			}
 
 			if memorizedNumber != "" {
 				if curNumber, err = makeOperation(memorizedNumber, curNumber, memorizedOperator); err != nil {
-					return 0, err
+					return "", err
 				}
 			}
 
-			if result, err = strconv.ParseFloat(curNumber, 64); err != nil {
-				return 0, nil
-			}
-			return result, nil
+			return curNumber, nil
 		}
 
 		nextOperator = string(expr[operatorIndex])
@@ -149,12 +139,12 @@ func calculate(expr string) (float64, error) {
 		switch nextOperator {
 		case "+", "-":
 			if curNumber, err = makeOperation(curNumber, curGetNumber, curGetOperator); err != nil {
-				return 0, err
+				return "", err
 			}
 
 			if memorizedNumber != "" {
 				if curNumber, err = makeOperation(memorizedNumber, curNumber, memorizedOperator); err != nil {
-					return 0, err
+					return "", err
 				}
 				memorizedNumber = ""
 			}
@@ -162,7 +152,7 @@ func calculate(expr string) (float64, error) {
 		case "*", "/":
 			if memorizedNumber != "" {
 				if curNumber, err = makeOperation(curNumber, curGetNumber, curGetOperator); err != nil {
-					return 0, err
+					return "", err
 				}
 
 			} else {
@@ -175,16 +165,36 @@ func calculate(expr string) (float64, error) {
 		curGetOperator = nextOperator
 	}
 
-	return 0, errors.New("error: incorrect expression")
+	return "", errors.New("error: incorrect expression")
+}
+
+func isOneNumber(line string) bool {
+	if utf8.RuneCountInString(line) == 1 && unicode.IsNumber(rune(line[0])) {
+		return true
+	}
+	if line[0] == '-' {
+		line = line[1:]
+	}
+	for _, symbolCode := range line {
+		if !unicode.IsNumber(symbolCode) && symbolCode != '.' && symbolCode != ',' {
+			return false
+		}
+	}
+
+	return true
+}
+
+func replaceInParenthesisWithResult(line string, inParenthesis string, result string) string {
+	inParenthesis = "(" + inParenthesis + ")"
+	return strings.Replace(line, inParenthesis, result, -1)
 }
 
 func Calc(expression string) (float64, error) {
 
-	var result float64
-	var curResult float64
+	var curResult string
 	currentExpr := expression
 	var err error
-	for currentExpr != "" {
+	for !isOneNumber(expression) {
 		if strings.Contains(currentExpr, "(") {
 			if currentExpr, err = getDeepestNearestParenthesis(currentExpr); err != nil {
 				return 0, err
@@ -194,12 +204,13 @@ func Calc(expression string) (float64, error) {
 		if curResult, err = calculate(currentExpr); err != nil {
 			return 0, err
 		}
-		result += curResult
-		fmt.Println(result)
-		break
-		//input = input.replaceInColsWithResult()
 
+		expression = replaceInParenthesisWithResult(expression, currentExpr, curResult)
 	}
 
-	return 5, nil
+	var result float64
+	if result, err = strconv.ParseFloat(expression, 64); err != nil {
+		return 0, err
+	}
+	return result, err
 }
