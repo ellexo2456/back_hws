@@ -194,21 +194,9 @@ func Calc(expression string) (float64, error) {
 	var curResult string
 	currentExpr := expression
 	var err error
-	for !isOneNumber(expression) {
-		if strings.Contains(expression, "(") {
-			if currentExpr, err = getDeepestNearestParenthesis(expression); err != nil {
-				return 0, err
-			}
-		} else {
-			if curResult, err = calculate(expression); err != nil {
-				return 0, err
-			}
-
-			var result float64
-			if result, err = strconv.ParseFloat(curResult, 64); err != nil {
-				return 0, err
-			}
-			return result, nil
+	for strings.Contains(expression, "(") {
+		if currentExpr, err = getDeepestNearestParenthesis(expression); err != nil {
+			return 0, err
 		}
 
 		if curResult, err = calculate(currentExpr); err != nil {
@@ -218,8 +206,12 @@ func Calc(expression string) (float64, error) {
 		expression = replaceInParenthesisWithResult(expression, currentExpr, curResult)
 	}
 
+	if curResult, err = calculate(expression); err != nil {
+		return 0, err
+	}
+
 	var result float64
-	if result, err = strconv.ParseFloat(expression, 64); err != nil {
+	if result, err = strconv.ParseFloat(curResult, 64); err != nil {
 		return 0, err
 	}
 	return result, nil

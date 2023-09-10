@@ -3,42 +3,55 @@ package calc
 import (
 	"errors"
 	"github.com/stretchr/testify/require"
+	"math"
 	"testing"
 )
-
-var inputStrings = []string{
-	"I love music.",
-	"I love music.",
-	"I love music.",
-	"\n",
-	"I Love music of Kartik.",
-	"I Love music of Kartik.",
-	"Thanks.",
-	"I love music of Kartik.",
-	"I love music of Kartik.",
-}
 
 var goodCases = map[string]struct {
 	input  string
 	result float64
 }{
 	"common": {
-		input: "(10*3)-((12/2)+(4*2))+((15-6)/3)",
-		result: []string{
-			"I love music.",
-			"\n",
-			"I Love music of Kartik.",
-			"Thanks.",
-			"I love music of Kartik.",
-		},
+		input:  "(10*3)-((12/2)+(4*2))+((15-6)/3)",
+		result: 19,
+	},
+	"with whitespaces": {
+		input:  "((18 + 6) * 5) - (48 / (3 - 1)) + (20 - (2 * 2))",
+		result: 112,
+	},
+	"with negatives inside": {
+		input:  "(10*3)-((-12/2)+(4*(-2)))+((15-6)/3)",
+		result: 47,
+	},
+	"with two minuses": {
+		input:  "(3*2/2)+((9*3)-(14-(-6)))*(5-2)",
+		result: 24,
+	},
+	"without parenthesis": {
+		input:  "3*2/2+9*3-14-6*5-2",
+		result: -16,
+	},
+	"only one number": {
+		input:  "33456",
+		result: 33456,
+	},
+	"with negative forehead": {
+		input:  "-336+232*24",
+		result: 5232,
+	},
+	"division by zero": {
+		input:  "-336+232*/0",
+		result: math.Inf(1),
+	},
+	"multiply on 1": {
+		input:  "56789*1",
+		result: math.Inf(56789),
 	},
 }
 
 var badCases = map[string]struct {
-	input   []string
-	result  []string
-	options Options
-	err     error
+	input  string
+	result float64
 }{
 	"undefined options": {
 		input:   inputStrings,
