@@ -33,14 +33,25 @@ func getDeepestNearestParenthesis(expr string) (string, error) {
 
 func getNumber(expr string) (string, int) {
 	var number string
+	if expr[0] == '-' {
+		number += "-"
+		expr = expr[1:]
+	}
+
 	for index, symbolCode := range expr {
 		if unicode.IsNumber(symbolCode) || symbolCode == '.' || symbolCode == ',' {
 			number += string(symbolCode)
 		} else {
+			if number[0] == '-' {
+				return number, index + 1
+			}
 			return number, index
 		}
 	}
 
+	if number[0] == '-' {
+		return number, len(expr) + 1
+	}
 	return number, len(expr)
 }
 
@@ -166,25 +177,6 @@ func calculate(expr string) (float64, error) {
 
 	return 0, errors.New("error: incorrect expression")
 }
-
-//	numb, op memory
-//	numbCur current
-//opGetCur, numbGetCur, current
-//	op next
-//
-//	numbCur = expr[0]
-//	for expr != "" {
-//		numbGetCurm, opGetCur = getNumber()
-//		opNext = getOp
-//
-//		if opNext == * {
-//			nembMem = numbCur
-//			opMem = opGetCut
-//		}
-//		if + {
-//			opCur = numbGetCur + numbCur
-//		}
-//	}
 
 func Calc(expression string) (float64, error) {
 
