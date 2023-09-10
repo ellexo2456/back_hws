@@ -2,8 +2,9 @@ package calc
 
 import (
 	"errors"
-	"fmt"
+	"strconv"
 	"strings"
+	"unicode"
 )
 
 func getDeepestNearestParenthesis(expr string) (string, error) {
@@ -29,9 +30,150 @@ func getDeepestNearestParenthesis(expr string) (string, error) {
 	return expr, errors.New("incorrect count of parenthesis")
 }
 
+func getNumber(expr string) (string, int) {
+	var number string
+	for index, symbolCode := range expr {
+		if unicode.IsNumber(symbolCode) || symbolCode == '.' || symbolCode == ',' {
+			number += string(symbolCode)
+		} else {
+			return number, index
+		}
+	}
+
+	return number, len(expr)
+}
+
+func makeOperation(left string, right string, operator string) (string, error) {
+	var leftNumber, rightNumber float64
+	var err error
+	if leftNumber, err = strconv.ParseFloat(left, 64); err != nil {
+		return "", err
+	}
+	if rightNumber, err = strconv.ParseFloat(right, 64); err != nil {
+		return "", err
+	}
+
+	var result float64
+	switch operator {
+	case "+":
+		result = leftNumber + rightNumber
+	case "-":
+		result = leftNumber - rightNumber
+	case "*":
+		result = leftNumber * rightNumber
+	case "/":
+		result = leftNumber / rightNumber
+	default:
+		return "", errors.New("Error: incorrect operator")
+	}
+
+	return strconv.FormatFloat(result, 'f', -1, 64), nil
+}
+
+func calculate(expr string) (float64, error) {
+	if len(expr) == 0 || len(expr) == 0 {
+		return strconv.ParseFloat(expr, 64)
+	}
+
+	var result float64
+	var memorizedNumber, memorizedOperator string
+	var curGetNumber, curGetOperator string
+	var curNumber string
+	var nextOperator string
+
+	var err error
+	var operatorIndex int
+
+	curNumber, operatorIndex = getNumber(expr[1:])
+	if expr[0] == '-' {
+		curNumber = "-" + curNumber
+	}
+	if operatorIndex == len(expr[1:]) {
+		if result, err = strconv.ParseFloat(curNumber, 64); err != nil {
+			return 0, nil
+		}
+		return result, nil
+	}
+	curGetOperator = string(expr[operatorIndex+1])
+	expr = expr[operatorIndex+1:]
+
+	for expr != "" {
+		curGetNumber, operatorIndex = getNumber(expr)
+
+		if operatorIndex == len(expr) {
+			if curNumber, err = makeOperation(curNumber, curGetNumber, curGetOperator); err != nil {
+				return 0, err
+			}
+
+			if memorizedNumber != "" {
+				if curNumber, err = makeOperation(curNumber, memorizedNumber, memorizedOperator); err != nil {
+					return 0, err
+				}
+			}
+
+			if result, err = strconv.ParseFloat(curNumber, 64); err != nil {
+				return 0, nil
+			}
+			return result, nil
+		}
+
+		nextOperator = string(expr[operatorIndex])
+		expr = expr[operatorIndex+1:]
+
+		switch nextOperator {
+		case "+", "-":
+			if curNumber, err = makeOperation(curNumber, curGetNumber, curGetOperator); err != nil {
+				return 0, err
+			}
+
+			if memorizedNumber != "" {
+				if curNumber, err = makeOperation(curNumber, memorizedNumber, memorizedOperator); err != nil {
+					return 0, err
+				}
+				memorizedNumber = ""
+			}
+
+		case "*", "/":
+			if memorizedNumber != "" {
+				if curNumber, err = makeOperation(curNumber, curGetNumber, curGetOperator); err != nil {
+					return 0, err
+				}
+
+			} else {
+				memorizedNumber = curNumber
+				memorizedOperator = curGetOperator
+			}
+		}
+
+		curGetOperator = nextOperator
+	}
+
+	return 0, errors.New("error: incorrect expression")
+}
+
+//	numb, op memory
+//	numbCur current
+//opGetCur, numbGetCur, current
+//	op next
+//
+//	numbCur = expr[0]
+//	for expr != "" {
+//		numbGetCurm, opGetCur = getNumber()
+//		opNext = getOp
+//
+//		if opNext == * {
+//			nembMem = numbCur
+//			opMem = opGetCut
+//		}
+//		if + {
+//			opCur = numbGetCur + numbCur
+//		}
+//	}
+
 func Calc(expression string) (float64, error) {
 
-	//var result float64
+	var result float64
+	var curResult float64
 	currentExpr := expression
 	var err error
 	for currentExpr != "" {
@@ -40,9 +182,11 @@ func Calc(expression string) (float64, error) {
 				return 0, err
 			}
 		}
-		fmt.Println(currentExpr)
-		return 4, nil
-		//result += calculate(line)
+
+		if curResult, err = calculate(currentExpr); err != nil {
+			return 0, err
+		}
+
 		//input = input.replaceInColsWithResult()
 
 	}
