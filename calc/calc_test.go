@@ -1,7 +1,6 @@
 package calc
 
 import (
-	"errors"
 	"github.com/stretchr/testify/require"
 	"math"
 	"testing"
@@ -53,23 +52,25 @@ var badCases = map[string]struct {
 	input  string
 	result float64
 }{
-	"undefined options": {
-		input:   inputStrings,
-		result:  nil,
-		options: Options{},
-		err:     errors.New("Empty options"),
+	"empty input": {
+		input:  "",
+		result: 0,
 	},
-	"undefined strings": {
-		input:   nil,
-		result:  nil,
-		options: allFlagsDown,
-		err:     errors.New("Empty input"),
+	"incorrect parenthesis count": {
+		input:  "(42-4*2))+((25*2)/(5+5))-(8/2)",
+		result: 0,
 	},
-	"flags c, d, u together": {
-		input:   inputStrings,
-		result:  nil,
-		options: Options{C: &tr, D: &tr, U: &tr, I: &fls, F: &zero, S: &zero},
-		err:     errors.New("You`re can`t use flags c,d and u together"),
+	"incorrect parenthesis syntax": {
+		input:  "42-4*2))+((25*2",
+		result: 0,
+	},
+	"invalid string": {
+		input:  "god, I swear it's a numbers",
+		result: 0,
+	},
+	"invalid expression": {
+		input:  "(10*/*2343)+-+((12+-+2)-+-(4*******2))-+-((15+-=6)+/+3)",
+		result: 0,
 	},
 }
 
@@ -78,7 +79,7 @@ func TestGoodCases(t *testing.T) {
 		test := test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := Unique(test.input, test.options)
+			got, err := Calc(test.input)
 			expected := test.result
 
 			require.Equal(t, expected, got)
@@ -92,7 +93,7 @@ func TestBadCases(t *testing.T) {
 		test := test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			got, err := Unique(test.input, test.options)
+			got, err := Calc(test.input)
 			expected := test.result
 
 			require.Equal(t, expected, got)

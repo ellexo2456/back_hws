@@ -190,7 +190,9 @@ func replaceInParenthesisWithResult(line string, inParenthesis string, result st
 }
 
 func Calc(expression string) (float64, error) {
-
+	if expression == "" {
+		return 0, errors.New("error: empty input")
+	}
 	var curResult string
 	currentExpr := expression
 	var err error
