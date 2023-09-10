@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -19,6 +20,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	input = strings.Join(strings.Fields(input), "")
 
 	var result float64
 	if result, err = calc.Calc(input); err != nil {

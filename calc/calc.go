@@ -24,7 +24,7 @@ func getDeepestNearestParenthesis(expr string) (string, error) {
 		}
 
 		if count == 0 {
-			return getDeepestNearestParenthesis(expr[startIndex+1 : endIndex+1])
+			return getDeepestNearestParenthesis(expr[startIndex+1 : startIndex+endIndex+1])
 		}
 	}
 
@@ -195,10 +195,20 @@ func Calc(expression string) (float64, error) {
 	currentExpr := expression
 	var err error
 	for !isOneNumber(expression) {
-		if strings.Contains(currentExpr, "(") {
-			if currentExpr, err = getDeepestNearestParenthesis(currentExpr); err != nil {
+		if strings.Contains(expression, "(") {
+			if currentExpr, err = getDeepestNearestParenthesis(expression); err != nil {
 				return 0, err
 			}
+		} else {
+			if curResult, err = calculate(expression); err != nil {
+				return 0, err
+			}
+
+			var result float64
+			if result, err = strconv.ParseFloat(curResult, 64); err != nil {
+				return 0, err
+			}
+			return result, nil
 		}
 
 		if curResult, err = calculate(currentExpr); err != nil {
@@ -212,5 +222,5 @@ func Calc(expression string) (float64, error) {
 	if result, err = strconv.ParseFloat(expression, 64); err != nil {
 		return 0, err
 	}
-	return result, err
+	return result, nil
 }
