@@ -1,7 +1,6 @@
 package unique
 
 import (
-	"errors"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -254,25 +253,21 @@ var badCases = map[string]struct {
 	input   []string
 	result  []string
 	options Options
-	err     error
 }{
 	"undefined options": {
 		input:   inputStrings,
 		result:  nil,
 		options: Options{},
-		err:     errors.New("Empty options"),
 	},
 	"undefined strings": {
 		input:   nil,
 		result:  nil,
 		options: allFlagsDown,
-		err:     errors.New("Empty input"),
 	},
 	"flags c, d, u together": {
 		input:   inputStrings,
 		result:  nil,
 		options: Options{C: &tr, D: &tr, U: &tr, I: &fls, F: &zero, S: &zero},
-		err:     errors.New("You`re can`t use flags c,d and u together"),
 	},
 }
 
