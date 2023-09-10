@@ -39,12 +39,12 @@ var goodCases = map[string]struct {
 		result: 5232,
 	},
 	"division by zero": {
-		input:  "-336+232*/0",
+		input:  "-336+232/0",
 		result: math.Inf(1),
 	},
 	"multiply on 1": {
 		input:  "56789*1",
-		result: math.Inf(56789),
+		result: 56789,
 	},
 }
 
@@ -66,6 +66,10 @@ var badCases = map[string]struct {
 	},
 	"invalid string": {
 		input:  "god, I swear it's a numbers",
+		result: 0,
+	},
+	"invalid string with parenthesis": {
+		input:  "god, I (swear) it's a numbers",
 		result: 0,
 	},
 	"invalid expression": {

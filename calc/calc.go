@@ -10,6 +10,9 @@ import (
 
 func getDeepestNearestParenthesis(expr string) (string, error) {
 	var startIndex int
+	if strings.Count(expr, "(") != strings.Count(expr, ")") {
+		return expr, errors.New("incorrect count of parenthesis")
+	}
 	if startIndex = strings.Index(expr, "("); startIndex == -1 {
 		return expr, nil
 	}
@@ -42,6 +45,9 @@ func getNumber(expr string) (string, int) {
 		if unicode.IsNumber(symbolCode) || symbolCode == '.' || symbolCode == ',' {
 			number += string(symbolCode)
 		} else {
+			if utf8.RuneCountInString(number) == 0 {
+				return "", -1
+			}
 			if number[0] == '-' {
 				return number, index + 1
 			}
@@ -97,6 +103,9 @@ func calculate(expr string) (string, error) {
 
 	if expr[0] == '-' {
 		curNumber, operatorIndex = getNumber(expr[1:])
+		if operatorIndex == -1 {
+			return "", errors.New("error: invalid string")
+		}
 		curNumber = "-" + curNumber
 
 		if operatorIndex == len(expr[1:]) {
@@ -107,6 +116,9 @@ func calculate(expr string) (string, error) {
 		expr = expr[operatorIndex+2:]
 	} else {
 		curNumber, operatorIndex = getNumber(expr)
+		if operatorIndex == -1 {
+			return "", errors.New("error: invalid string")
+		}
 
 		if operatorIndex == len(expr) {
 			return curNumber, nil
@@ -118,6 +130,9 @@ func calculate(expr string) (string, error) {
 
 	for expr != "" {
 		curGetNumber, operatorIndex = getNumber(expr)
+		if operatorIndex == -1 {
+			return "", errors.New("error: invalid string")
+		}
 
 		if operatorIndex == len(expr) {
 			if curNumber, err = makeOperation(curNumber, curGetNumber, curGetOperator); err != nil {
@@ -168,22 +183,6 @@ func calculate(expr string) (string, error) {
 	return "", errors.New("error: incorrect expression")
 }
 
-func isOneNumber(line string) bool {
-	if utf8.RuneCountInString(line) == 1 && unicode.IsNumber(rune(line[0])) {
-		return true
-	}
-	if line[0] == '-' {
-		line = line[1:]
-	}
-	for _, symbolCode := range line {
-		if !unicode.IsNumber(symbolCode) && symbolCode != '.' && symbolCode != ',' {
-			return false
-		}
-	}
-
-	return true
-}
-
 func replaceInParenthesisWithResult(line string, inParenthesis string, result string) string {
 	inParenthesis = "(" + inParenthesis + ")"
 	return strings.Replace(line, inParenthesis, result, -1)
@@ -193,6 +192,8 @@ func Calc(expression string) (float64, error) {
 	if expression == "" {
 		return 0, errors.New("error: empty input")
 	}
+	expression = strings.Join(strings.Fields(expression), "")
+
 	var curResult string
 	currentExpr := expression
 	var err error
