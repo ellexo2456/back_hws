@@ -2,6 +2,7 @@ package calc
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
@@ -84,18 +85,32 @@ func calculate(expr string) (float64, error) {
 	var err error
 	var operatorIndex int
 
-	curNumber, operatorIndex = getNumber(expr[1:])
 	if expr[0] == '-' {
+		curNumber, operatorIndex = getNumber(expr[1:])
 		curNumber = "-" + curNumber
-	}
-	if operatorIndex == len(expr[1:]) {
-		if result, err = strconv.ParseFloat(curNumber, 64); err != nil {
-			return 0, nil
+
+		if operatorIndex == len(expr[1:]) {
+			if result, err = strconv.ParseFloat(curNumber, 64); err != nil {
+				return 0, nil
+			}
+			return result, nil
 		}
-		return result, nil
+
+		curGetOperator = string(expr[operatorIndex+1])
+		expr = expr[operatorIndex+2:]
+	} else {
+		curNumber, operatorIndex = getNumber(expr)
+
+		if operatorIndex == len(expr) {
+			if result, err = strconv.ParseFloat(curNumber, 64); err != nil {
+				return 0, nil
+			}
+			return result, nil
+		}
+
+		curGetOperator = string(expr[operatorIndex])
+		expr = expr[operatorIndex+1:]
 	}
-	curGetOperator = string(expr[operatorIndex+1])
-	expr = expr[operatorIndex+1:]
 
 	for expr != "" {
 		curGetNumber, operatorIndex = getNumber(expr)
@@ -106,7 +121,7 @@ func calculate(expr string) (float64, error) {
 			}
 
 			if memorizedNumber != "" {
-				if curNumber, err = makeOperation(curNumber, memorizedNumber, memorizedOperator); err != nil {
+				if curNumber, err = makeOperation(memorizedNumber, curNumber, memorizedOperator); err != nil {
 					return 0, err
 				}
 			}
@@ -127,7 +142,7 @@ func calculate(expr string) (float64, error) {
 			}
 
 			if memorizedNumber != "" {
-				if curNumber, err = makeOperation(curNumber, memorizedNumber, memorizedOperator); err != nil {
+				if curNumber, err = makeOperation(memorizedNumber, curNumber, memorizedOperator); err != nil {
 					return 0, err
 				}
 				memorizedNumber = ""
@@ -142,6 +157,7 @@ func calculate(expr string) (float64, error) {
 			} else {
 				memorizedNumber = curNumber
 				memorizedOperator = curGetOperator
+				curNumber = curGetNumber
 			}
 		}
 
@@ -186,7 +202,9 @@ func Calc(expression string) (float64, error) {
 		if curResult, err = calculate(currentExpr); err != nil {
 			return 0, err
 		}
-
+		result += curResult
+		fmt.Println(result)
+		break
 		//input = input.replaceInColsWithResult()
 
 	}
