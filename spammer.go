@@ -5,30 +5,45 @@ import (
 	"slices"
 )
 
+func runAndClose(cmd cmd, in, out chan any) {
+	cmd(out, in)
+	defer close(out)
+}
+
 func RunPipeline(cmds ...cmd) {
 	if len(cmds) == 0 {
 		return
 	}
+	in := make(chan interface{}, 50)
+	out := make(chan interface{}, 50)
+	func(in, out chan interface{}, c cmd) {
+		c(in, out)
+		defer close(out)
+	}(in, out, cmds[0])
 
-	var in, out chan interface{}
-	cmds[0](in, out)
-
-	for _, cmd := range cmds[1:] {
-		in = make(chan interface{})
-		cmd(out, in)
+	for _, c := range cmds[1:] {
+		in = make(chan interface{}, 50)
+		func(in, out chan interface{}, c cmd) {
+			c(in, out)
+			defer close(out)
+		}(out, in, c)
 		out = in
 	}
 }
 
 // in - string
-// out - User
+// out - Use
 func SelectUsers(in, out chan interface{}) {
+	var usersID []uint64
 	for input := range in {
 		user := GetUser(input.(string))
-		out <- user
+		if !slices.Contains(usersID, user.ID) {
+			usersID = append(usersID, user.ID)
+			out <- user
+		}
 	}
 
-	close(out)
+	//close(out)
 }
 
 // in - User
@@ -43,8 +58,6 @@ func SelectMessages(in, out chan interface{}) {
 			}
 		}
 	}
-
-	close(out)
 }
 
 // in - MsgID
@@ -57,8 +70,6 @@ func CheckSpam(in, out chan interface{}) {
 			out <- MsgData{input.(MsgID), hasSpam}
 		}
 	}
-
-	close(out)
 }
 
 // in - MsgData
@@ -79,5 +90,4 @@ func CombineResults(in, out chan interface{}) {
 
 		return 0
 	})
-	close(out)
 }
