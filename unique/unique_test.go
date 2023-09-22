@@ -92,6 +92,17 @@ var goodCases = map[string]struct {
 		result:  []string{},
 		options: allFlagsDown,
 	},
+	"empty options": {
+		input: inputStrings,
+		result: []string{
+			"I love music.",
+			"\n",
+			"I Love music of Kartik.",
+			"Thanks.",
+			"I love music of Kartik.",
+		},
+		options: Options{},
+	},
 	"c flag": {
 		input: inputStrings,
 		result: []string{
@@ -253,11 +264,6 @@ var badCases = map[string]struct {
 	result  []string
 	options Options
 }{
-	"undefined options": {
-		input:   inputStrings,
-		result:  nil,
-		options: Options{},
-	},
 	"undefined strings": {
 		input:   nil,
 		result:  nil,

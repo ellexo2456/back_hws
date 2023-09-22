@@ -27,9 +27,6 @@ func argumentsCheck(lines []string, options Options) ([]string, error) {
 	if lines == nil {
 		return nil, errors.New("Empty input")
 	}
-	if options == (Options{}) {
-		return nil, errors.New("Empty options")
-	}
 
 	if options.F < 0 {
 		return nil, errors.New("Flag f must be non-negative")
