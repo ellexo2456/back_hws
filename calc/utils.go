@@ -8,6 +8,15 @@ import (
 	"unicode/utf8"
 )
 
+type utilsMathComponents struct {
+	memorizedNumber   string
+	memorizedOperator string
+	curGetNumber      string
+	curGetOperator    string
+	curNumber         string
+	nextOperator      string
+}
+
 func getDeepestNearestParenthesis(expr string) (string, error) {
 	if strings.Count(expr, "(") != strings.Count(expr, ")") {
 		return "", errors.New("incorrect count of parenthesis")
@@ -110,20 +119,74 @@ func getFirstNumber(expr string) (string, string, string, int, error) {
 	return expr[operatorIndex+1:], curNumber, string(expr[operatorIndex]), operatorIndex, nil
 }
 
-func NumbersUpdate(curNumber string, memorizedNumber string, curGetNumber string, curGetOperator string, memorizedOperator string) (string, string, error) {
+func numbersUpdate(components utilsMathComponents) (utilsMathComponents, error) {
 	var err error
-	if curNumber, err = makeOperation(curNumber, curGetNumber, curGetOperator); err != nil {
-		return "", "", err
+	if components.curNumber, err = makeOperation(components.curNumber, components.curGetNumber, components.curGetOperator); err != nil {
+		return utilsMathComponents{}, err
 	}
 
-	if memorizedNumber != "" {
-		if curNumber, err = makeOperation(memorizedNumber, curNumber, memorizedOperator); err != nil {
-			return "", "", err
+	if components.memorizedNumber != "" {
+		if components.curNumber, err = makeOperation(components.memorizedNumber, components.curNumber, components.memorizedOperator); err != nil {
+			return utilsMathComponents{}, err
 		}
-		memorizedNumber = ""
+		components.memorizedNumber = ""
 	}
 
-	return curNumber, memorizedNumber, nil
+	return components, nil
+}
+
+func operatorSwitch(components utilsMathComponents) (utilsMathComponents, error) {
+	var err error
+
+	switch components.nextOperator {
+	case "+", "-":
+		if components, err = numbersUpdate(components); err != nil {
+			return utilsMathComponents{}, err
+		}
+
+	case "*", "/":
+		if components.memorizedNumber != "" {
+			if components.curNumber, err = makeOperation(components.curNumber, components.curGetNumber, components.curGetOperator); err != nil {
+				return utilsMathComponents{}, err
+			}
+
+		} else {
+			components.memorizedNumber = components.curNumber
+			components.memorizedOperator = components.curGetOperator
+			components.curNumber = components.curGetNumber
+		}
+	}
+
+	return components, nil
+}
+
+func calculateLoop(expr string, components utilsMathComponents, operatorIndex int) (string, error) {
+	var err error
+
+	for expr != "" {
+		components.curGetNumber, operatorIndex = getNumber(expr)
+		if operatorIndex == -1 {
+			return "", errors.New("error: invalid string")
+		}
+
+		if operatorIndex == len(expr) {
+			if components, err = numbersUpdate(components); err != nil {
+				return "", err
+			}
+			return components.curNumber, nil
+		}
+
+		components.nextOperator = string(expr[operatorIndex])
+		expr = expr[operatorIndex+1:]
+
+		if components, err = operatorSwitch(components); err != nil {
+			return "", err
+		}
+
+		components.curGetOperator = components.nextOperator
+	}
+
+	return "", errors.New("error: incorrect expression")
 }
 
 func calculate(expr string) (string, error) {
@@ -131,67 +194,24 @@ func calculate(expr string) (string, error) {
 		return expr, nil
 	}
 
-	var memorizedNumber, memorizedOperator string
-	var curGetNumber, curGetOperator string
-	var curNumber string
-	var nextOperator string
-
+	var components utilsMathComponents
 	var err error
 	var operatorIndex int
-
 	if expr[0] == '-' {
-		expr, curNumber, curGetOperator, operatorIndex, err = getFirstNumber(expr[1:])
-		curNumber = "-" + curNumber
+		expr, components.curNumber, components.curGetOperator, operatorIndex, err = getFirstNumber(expr[1:])
+		components.curNumber = "-" + components.curNumber
 	} else {
-		expr, curNumber, curGetOperator, operatorIndex, err = getFirstNumber(expr)
+		expr, components.curNumber, components.curGetOperator, operatorIndex, err = getFirstNumber(expr)
 	}
 
 	if err != nil {
 		return "", errors.New("error: invalid string")
 	}
 	if expr == "" {
-		return curNumber, nil
+		return components.curNumber, nil
 	}
 
-	for expr != "" {
-		curGetNumber, operatorIndex = getNumber(expr)
-		if operatorIndex == -1 {
-			return "", errors.New("error: invalid string")
-		}
-
-		if operatorIndex == len(expr) {
-			if curNumber, memorizedNumber, err = NumbersUpdate(curNumber, memorizedNumber, curGetNumber, curGetOperator, memorizedOperator); err != nil {
-				return "", err
-			}
-			return curNumber, nil
-		}
-
-		nextOperator = string(expr[operatorIndex])
-		expr = expr[operatorIndex+1:]
-
-		switch nextOperator {
-		case "+", "-":
-			if curNumber, memorizedNumber, err = NumbersUpdate(curNumber, memorizedNumber, curGetNumber, curGetOperator, memorizedOperator); err != nil {
-				return "", err
-			}
-
-		case "*", "/":
-			if memorizedNumber != "" {
-				if curNumber, err = makeOperation(curNumber, curGetNumber, curGetOperator); err != nil {
-					return "", err
-				}
-
-			} else {
-				memorizedNumber = curNumber
-				memorizedOperator = curGetOperator
-				curNumber = curGetNumber
-			}
-		}
-
-		curGetOperator = nextOperator
-	}
-
-	return "", errors.New("error: incorrect expression")
+	return calculateLoop(expr, components, operatorIndex)
 }
 
 func replaceInParenthesisWithResult(line string, inParenthesis string, result string) string {
