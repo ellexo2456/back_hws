@@ -18,7 +18,7 @@ func boolToInt(condition bool) int {
 }
 
 func Unique(lines []string, options Options) ([]string, error) {
-	if _, err := ArgumentsCheck(lines, options); err != nil {
+	if _, err := argumentsCheck(lines, options); err != nil {
 		return nil, err
 	}
 
@@ -29,10 +29,10 @@ func Unique(lines []string, options Options) ([]string, error) {
 	count := 1
 
 	for i, line := range lines[1:] {
-		curLine, prevLine := PrepareToCompare(line, lines[i], options)
+		curLine, prevLine := prepareToCompare(line, lines[i], options)
 
 		if curLine != prevLine {
-			uniqueLines = FormatLinesSlice(options, uniqueLines, count)
+			uniqueLines = formatLinesSlice(options, uniqueLines, count)
 
 			uniqueLines = append(uniqueLines, line)
 			count = 1
@@ -43,5 +43,5 @@ func Unique(lines []string, options Options) ([]string, error) {
 		count++
 	}
 
-	return FormatLinesSlice(options, uniqueLines, count), nil
+	return formatLinesSlice(options, uniqueLines, count), nil
 }

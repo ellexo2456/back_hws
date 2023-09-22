@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func ArgumentsCheck(lines []string, options Options) ([]string, error) {
+func argumentsCheck(lines []string, options Options) ([]string, error) {
 	if lines == nil {
 		return nil, errors.New("Empty input")
 	}
@@ -43,7 +43,7 @@ func runeCutter(fields []rune, count int) string {
 	}
 }
 
-func PrepareToCompare(curLine string, prevLine string, options Options) (string, string) {
+func prepareToCompare(curLine string, prevLine string, options Options) (string, string) {
 
 	if *options.I {
 		curLine, prevLine = strings.ToLower(curLine), strings.ToLower(prevLine)
@@ -58,7 +58,7 @@ func PrepareToCompare(curLine string, prevLine string, options Options) (string,
 	return curLine, prevLine
 }
 
-func FormatLinesSlice(options Options, slice []string, count int) []string {
+func formatLinesSlice(options Options, slice []string, count int) []string {
 	if *options.C {
 		slice[len(slice)-1] = strconv.Itoa(count) + " " + slice[len(slice)-1]
 	} else if *options.D {
