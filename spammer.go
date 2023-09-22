@@ -5,8 +5,8 @@ import (
 	"slices"
 )
 
-func runAndClose(cmd cmd, in, out chan any) {
-	cmd(out, in)
+func runAndClose(c cmd, in, out chan interface{}) {
+	c(in, out)
 	defer close(out)
 }
 
@@ -14,19 +14,22 @@ func RunPipeline(cmds ...cmd) {
 	if len(cmds) == 0 {
 		return
 	}
-	in := make(chan interface{}, 50)
-	out := make(chan interface{}, 50)
-	func(in, out chan interface{}, c cmd) {
-		c(in, out)
-		defer close(out)
-	}(in, out, cmds[0])
+	in := make(chan interface{})
+	out := make(chan interface{})
+	//go func(in, out chan interface{}, c cmd) {
+	//	c(in, out)
+	//	defer close(out)
+	//}(in, out, cmds[0])
+	go runAndClose(cmds[0], in, out)
 
 	for _, c := range cmds[1:] {
-		in = make(chan interface{}, 50)
-		func(in, out chan interface{}, c cmd) {
-			c(in, out)
-			defer close(out)
-		}(out, in, c)
+		in = make(chan interface{})
+		//fmt.Println(i)
+		//go func(in, out chan interface{}, c cmd) {
+		//	c(in, out)
+		//	defer close(out)
+		//}(out, in, c)
+		go runAndClose(c, out, in)
 		out = in
 	}
 }
