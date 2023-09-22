@@ -9,13 +9,22 @@ import (
 )
 
 func optionsInit() unique.Options {
+	c := flag.Bool("c", false, "count the number of line appearances")
+	d := flag.Bool("d", false, "only duplicated")
+	u := flag.Bool("u", false, "only unique")
+	i := flag.Bool("i", false, "ignore case")
+	f := flag.Int("f", 0, "ignore first num fields")
+	s := flag.Int("s", 0, "ignore first num chars")
+
+	flag.Parse()
+
 	return unique.Options{
-		C: flag.Bool("c", false, "count the number of line appearances"),
-		D: flag.Bool("d", false, "only duplicated"),
-		U: flag.Bool("u", false, "only unique"),
-		I: flag.Bool("i", false, "ignore case"),
-		F: flag.Int("f", 0, "ignore first num fields"),
-		S: flag.Int("s", 0, "ignore first num chars"),
+		C: *c,
+		D: *d,
+		U: *u,
+		I: *i,
+		F: *f,
+		S: *s,
 	}
 }
 

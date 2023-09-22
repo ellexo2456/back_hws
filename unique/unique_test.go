@@ -10,7 +10,6 @@ var fls = false
 var zero = 0
 var one = 1
 var two = 2
-var ten = 10
 var inputStrings = []string{
 	"I love music.",
 	"I love music.",
@@ -23,7 +22,7 @@ var inputStrings = []string{
 	"I love music of Kartik.",
 }
 
-var allFlagsDown Options = Options{C: &fls, D: &fls, U: &fls, I: &fls, F: &zero, S: &zero}
+var allFlagsDown Options = Options{C: fls, D: fls, U: fls, I: fls, F: zero, S: zero}
 
 var goodCases = map[string]struct {
 	input   []string
@@ -102,7 +101,7 @@ var goodCases = map[string]struct {
 			"1 Thanks.",
 			"2 I love music of Kartik.",
 		},
-		options: Options{C: &tr, D: &fls, U: &fls, I: &fls, F: &zero, S: &zero},
+		options: Options{C: tr, D: fls, U: fls, I: fls, F: zero, S: zero},
 	},
 	"d flag": {
 		input: inputStrings,
@@ -111,7 +110,7 @@ var goodCases = map[string]struct {
 			"I Love music of Kartik.",
 			"I love music of Kartik.",
 		},
-		options: Options{C: &fls, D: &tr, U: &fls, I: &fls, F: &zero, S: &zero},
+		options: Options{C: fls, D: tr, U: fls, I: fls, F: zero, S: zero},
 	},
 	"u flag": {
 		input: inputStrings,
@@ -119,7 +118,7 @@ var goodCases = map[string]struct {
 			"\n",
 			"Thanks.",
 		},
-		options: Options{C: &fls, D: &fls, U: &tr, I: &fls, F: &zero, S: &zero},
+		options: Options{C: fls, D: fls, U: tr, I: fls, F: zero, S: zero},
 	},
 	"i flag": {
 		input: []string{
@@ -140,7 +139,7 @@ var goodCases = map[string]struct {
 			"Thanks.",
 			"I love music of Kartik.",
 		},
-		options: Options{C: &fls, D: &fls, U: &fls, I: &tr, F: &zero, S: &zero},
+		options: Options{C: fls, D: fls, U: fls, I: tr, F: zero, S: zero},
 	},
 	"f flag": {
 		input: []string{
@@ -161,7 +160,7 @@ var goodCases = map[string]struct {
 			"Thanks.",
 			"some love music of Kartik.",
 		},
-		options: Options{C: &fls, D: &fls, U: &fls, I: &fls, F: &one, S: &zero},
+		options: Options{C: fls, D: fls, U: fls, I: fls, F: one, S: zero},
 	},
 	"s flag": {
 		input: []string{
@@ -184,7 +183,7 @@ var goodCases = map[string]struct {
 			"Thanks.",
 			"I love music of Kartik.",
 		},
-		options: Options{C: &fls, D: &fls, U: &fls, I: &fls, F: &zero, S: &two},
+		options: Options{C: fls, D: fls, U: fls, I: fls, F: zero, S: two},
 	},
 	"f and s flags": {
 		input: []string{
@@ -206,7 +205,7 @@ var goodCases = map[string]struct {
 			"some loVe music of Kartik.",
 			"I love music of Kartik.",
 		},
-		options: Options{C: &fls, D: &fls, U: &fls, I: &fls, F: &one, S: &two},
+		options: Options{C: fls, D: fls, U: fls, I: fls, F: one, S: two},
 	},
 	"f flag a lot": {
 		input: []string{
@@ -223,7 +222,7 @@ var goodCases = map[string]struct {
 		result: []string{
 			"I love music.",
 		},
-		options: Options{C: &fls, D: &fls, U: &fls, I: &fls, F: &ten, S: &zero},
+		options: Options{C: fls, D: fls, U: fls, I: fls, F: 10, S: zero},
 	},
 	"s flag with rune strings": {
 		input: []string{
@@ -245,7 +244,7 @@ var goodCases = map[string]struct {
 			"Пасиба.",
 			"Мне нравится музыка.",
 		},
-		options: Options{C: &fls, D: &fls, U: &fls, I: &fls, F: &zero, S: &two},
+		options: Options{C: fls, D: fls, U: fls, I: fls, F: zero, S: two},
 	},
 }
 
@@ -267,7 +266,7 @@ var badCases = map[string]struct {
 	"flags c, d, u together": {
 		input:   inputStrings,
 		result:  nil,
-		options: Options{C: &tr, D: &tr, U: &tr, I: &fls, F: &zero, S: &zero},
+		options: Options{C: tr, D: tr, U: tr, I: fls, F: zero, S: zero},
 	},
 }
 

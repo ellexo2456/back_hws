@@ -2,13 +2,11 @@ package main
 
 import (
 	"back_hws/unique"
-	"flag"
 	"log"
 )
 
 func main() {
 	options := optionsInit()
-	flag.Parse()
 
 	input, err := readInput()
 	if err != nil {

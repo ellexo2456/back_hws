@@ -6,6 +6,23 @@ import (
 	"strings"
 )
 
+type Options struct {
+	C bool
+	D bool
+	U bool
+	I bool
+	F int
+	S int
+}
+
+func boolToInt(condition bool) int {
+	if condition {
+		return 1
+	} else {
+		return 0
+	}
+}
+
 func argumentsCheck(lines []string, options Options) ([]string, error) {
 	if lines == nil {
 		return nil, errors.New("Empty input")
@@ -14,13 +31,13 @@ func argumentsCheck(lines []string, options Options) ([]string, error) {
 		return nil, errors.New("Empty options")
 	}
 
-	if *options.F < 0 {
+	if options.F < 0 {
 		return nil, errors.New("Flag f must be non-negative")
 	}
-	if *options.S < 0 {
+	if options.S < 0 {
 		return nil, errors.New("Flag s must be non-negative")
 	}
-	if (boolToInt(*options.C) + boolToInt(*options.D) + boolToInt(*options.U)) > 1 {
+	if (boolToInt(options.C) + boolToInt(options.D) + boolToInt(options.U)) > 1 {
 		return nil, errors.New("You`re can`t use flags c,d and u together")
 	}
 
@@ -45,27 +62,27 @@ func runeCutter(fields []rune, count int) string {
 
 func prepareToCompare(curLine string, prevLine string, options Options) (string, string) {
 
-	if *options.I {
+	if options.I {
 		curLine, prevLine = strings.ToLower(curLine), strings.ToLower(prevLine)
 	}
-	if *options.F != 0 {
-		curLine, prevLine = fieldCutter(strings.Fields(curLine), *options.F), fieldCutter(strings.Fields(prevLine), *options.F)
+	if options.F != 0 {
+		curLine, prevLine = fieldCutter(strings.Fields(curLine), options.F), fieldCutter(strings.Fields(prevLine), options.F)
 	}
-	if *options.S != 0 {
-		curLine, prevLine = runeCutter([]rune(curLine), *options.S), runeCutter([]rune(prevLine), *options.S)
+	if options.S != 0 {
+		curLine, prevLine = runeCutter([]rune(curLine), options.S), runeCutter([]rune(prevLine), options.S)
 	}
 
 	return curLine, prevLine
 }
 
 func formatLinesSlice(options Options, slice []string, count int) []string {
-	if *options.C {
+	if options.C {
 		slice[len(slice)-1] = strconv.Itoa(count) + " " + slice[len(slice)-1]
-	} else if *options.D {
+	} else if options.D {
 		if count == 1 {
 			slice = slice[:len(slice)-1]
 		}
-	} else if *options.U {
+	} else if options.U {
 		if count > 1 {
 			slice = slice[:len(slice)-1]
 		}
