@@ -1,7 +1,8 @@
 package unique
 
 func Unique(lines []string, options Options) ([]string, error) {
-	if _, err := argumentsCheck(lines, options); err != nil {
+	var err error
+	if _, err = argumentsCheck(lines, options); err != nil {
 		return nil, err
 	}
 
@@ -15,7 +16,9 @@ func Unique(lines []string, options Options) ([]string, error) {
 		curLine, prevLine := prepareToCompare(line, lines[i], options)
 
 		if curLine != prevLine {
-			uniqueLines = formatLinesSlice(options, uniqueLines, count)
+			if uniqueLines, err = formatLinesSlice(options, uniqueLines, count); err != nil {
+				return nil, err
+			}
 
 			uniqueLines = append(uniqueLines, line)
 			count = 1
@@ -26,5 +29,5 @@ func Unique(lines []string, options Options) ([]string, error) {
 		count++
 	}
 
-	return formatLinesSlice(options, uniqueLines, count), nil
+	return formatLinesSlice(options, uniqueLines, count)
 }

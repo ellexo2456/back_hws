@@ -72,7 +72,11 @@ func prepareToCompare(curLine string, prevLine string, options Options) (string,
 	return curLine, prevLine
 }
 
-func formatLinesSlice(options Options, slice []string, count int) []string {
+func formatLinesSlice(options Options, slice []string, count int) ([]string, error) {
+	if len(slice) < 1 {
+		return nil, errors.New("incorrect lines count")
+	}
+
 	if options.C {
 		slice[len(slice)-1] = strconv.Itoa(count) + " " + slice[len(slice)-1]
 	} else if options.D {
@@ -85,5 +89,5 @@ func formatLinesSlice(options Options, slice []string, count int) []string {
 		}
 	}
 
-	return slice
+	return slice, nil
 }
