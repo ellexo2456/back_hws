@@ -2,58 +2,24 @@ package main
 
 import (
 	"back_hws/unique"
-	"bufio"
 	"flag"
-	"fmt"
 	"log"
-	"os"
 )
 
 func main() {
-	options := OptionsInit()
+	options := optionsInit()
 	flag.Parse()
 
-	inputFile, inputError, outputFile, outputError := FileInit()
-
-	if inputError != nil {
-		log.Fatal(inputError)
-	}
-	if outputError != nil {
-		log.Fatal(outputError)
-	}
-
-	var scanner *bufio.Scanner
-	if inputFile != nil {
-		scanner = bufio.NewScanner(inputFile)
-	} else {
-		scanner = bufio.NewScanner(os.Stdin)
-		defer inputFile.Close()
-	}
-
-	var input []string
-	for scanner.Scan() {
-		input = append(input, scanner.Text())
-	}
-	err := scanner.Err()
+	input, err := readInput()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	input, err = unique.Unique(input, options)
-	if err != nil {
+	if input, err = unique.Unique(input, options); err != nil {
 		log.Fatal(err)
 	}
 
-	var writer *bufio.Writer
-	if outputFile != nil {
-		writer = bufio.NewWriter(outputFile)
-	} else {
-		writer = bufio.NewWriter(os.Stdout)
-		defer outputFile.Close()
+	if err = writeOutput(input); err != nil {
+		log.Fatal(err)
 	}
-
-	for _, i := range input {
-		fmt.Fprintln(writer, i)
-	}
-	writer.Flush()
 }

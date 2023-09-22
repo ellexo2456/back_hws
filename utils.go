@@ -2,11 +2,13 @@ package main
 
 import (
 	"back_hws/unique"
+	"bufio"
 	"flag"
+	"fmt"
 	"os"
 )
 
-func OptionsInit() unique.Options {
+func optionsInit() unique.Options {
 	return unique.Options{
 		C: flag.Bool("c", false, "count the number of line appearances"),
 		D: flag.Bool("d", false, "only duplicated"),
@@ -17,18 +19,67 @@ func OptionsInit() unique.Options {
 	}
 }
 
-func FileInit() (*os.File, error, *os.File, error) {
+func readInput() ([]string, error) {
 	params := flag.Args()
+	var inputFile *os.File
+	var err error
+	var scanner *bufio.Scanner
 
-	switch len(flag.Args()) {
-	case 1:
-		inputFile, err := os.Open(params[0])
-		return inputFile, err, nil, nil
-	case 2:
-		inputFile, inputErr := os.Open(params[0])
-		outputFile, outputErr := os.Create(params[1])
-		return inputFile, inputErr, outputFile, outputErr
-	default:
-		return nil, nil, nil, nil
+	if len(params) >= 1 {
+		if inputFile, err = os.Open(params[0]); err != nil {
+			return nil, err
+		}
+		scanner = bufio.NewScanner(inputFile)
+	} else {
+		scanner = bufio.NewScanner(os.Stdin)
 	}
+
+	var input []string
+	for scanner.Scan() {
+		input = append(input, scanner.Text())
+	}
+
+	if err = scanner.Err(); err != nil {
+		return nil, err
+	}
+	if inputFile != nil {
+		if err = inputFile.Close(); err != nil {
+			return nil, err
+		}
+	}
+
+	return input, nil
+}
+
+func writeOutput(input []string) error {
+	params := flag.Args()
+	var outputFile *os.File
+	var err error
+	var writer *bufio.Writer
+
+	if len(params) == 2 {
+		if outputFile, err = os.Create(params[1]); err != nil {
+			return err
+		}
+		writer = bufio.NewWriter(outputFile)
+	} else {
+		writer = bufio.NewWriter(os.Stdout)
+	}
+
+	for _, i := range input {
+		if _, err := fmt.Fprintln(writer, i); err != nil {
+			return err
+		}
+	}
+	if err = writer.Flush(); err != nil {
+		return err
+	}
+
+	if outputFile != nil {
+		if err = outputFile.Close(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
