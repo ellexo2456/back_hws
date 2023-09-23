@@ -28,6 +28,13 @@ func optionsInit() unique.Options {
 	}
 }
 
+func closeAndReport(file *os.File) {
+	err := file.Close()
+	if err != nil {
+		fmt.Println("Error; ", err)
+	}
+}
+
 func readInput() ([]string, error) {
 	params := flag.Args()
 	var inputFile *os.File
@@ -38,14 +45,9 @@ func readInput() ([]string, error) {
 		if inputFile, err = os.Open(params[0]); err != nil {
 			return nil, err
 		}
-		defer func(inputFile *os.File) {
-			err := inputFile.Close()
-			if err != nil {
-				fmt.Println("Error: ", err)
-			}
-		}(inputFile)
-
+		defer closeAndReport(inputFile)
 		scanner = bufio.NewScanner(inputFile)
+
 	} else {
 		scanner = bufio.NewScanner(os.Stdin)
 	}
@@ -72,14 +74,9 @@ func writeOutput(input []string) error {
 		if outputFile, err = os.Create(params[1]); err != nil {
 			return err
 		}
-		defer func(outputFile *os.File) {
-			err := outputFile.Close()
-			if err != nil {
-				fmt.Println("Error; ", err)
-			}
-		}(outputFile)
-
+		closeAndReport(outputFile)
 		writer = bufio.NewWriter(outputFile)
+
 	} else {
 		writer = bufio.NewWriter(os.Stdout)
 	}
