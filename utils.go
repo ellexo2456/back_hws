@@ -74,7 +74,7 @@ func writeOutput(input []string) error {
 		if outputFile, err = os.Create(params[1]); err != nil {
 			return err
 		}
-		closeAndReport(outputFile)
+		defer closeAndReport(outputFile)
 		writer = bufio.NewWriter(outputFile)
 
 	} else {
