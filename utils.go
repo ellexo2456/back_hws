@@ -38,6 +38,13 @@ func readInput() ([]string, error) {
 		if inputFile, err = os.Open(params[0]); err != nil {
 			return nil, err
 		}
+		defer func(inputFile *os.File) {
+			err := inputFile.Close()
+			if err != nil {
+				fmt.Println("Error: ", err)
+			}
+		}(inputFile)
+
 		scanner = bufio.NewScanner(inputFile)
 	} else {
 		scanner = bufio.NewScanner(os.Stdin)
@@ -50,11 +57,6 @@ func readInput() ([]string, error) {
 
 	if err = scanner.Err(); err != nil {
 		return nil, err
-	}
-	if inputFile != nil {
-		if err = inputFile.Close(); err != nil {
-			return nil, err
-		}
 	}
 
 	return input, nil
@@ -70,6 +72,13 @@ func writeOutput(input []string) error {
 		if outputFile, err = os.Create(params[1]); err != nil {
 			return err
 		}
+		defer func(outputFile *os.File) {
+			err := outputFile.Close()
+			if err != nil {
+				fmt.Println("Error; ", err)
+			}
+		}(outputFile)
+
 		writer = bufio.NewWriter(outputFile)
 	} else {
 		writer = bufio.NewWriter(os.Stdout)
@@ -82,12 +91,6 @@ func writeOutput(input []string) error {
 	}
 	if err = writer.Flush(); err != nil {
 		return err
-	}
-
-	if outputFile != nil {
-		if err = outputFile.Close(); err != nil {
-			return err
-		}
 	}
 
 	return nil
