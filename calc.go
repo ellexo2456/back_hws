@@ -4,7 +4,6 @@ import (
 	"back_hws/calc"
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -17,12 +16,14 @@ func main() {
 
 	err := scanner.Err()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Error: ", err)
+		return
 	}
 
 	var result float64
 	if result, err = calc.Calc(input); err != nil {
-		log.Fatal("Error: ", err)
+		fmt.Println("Error: ", err)
+		return
 	}
 	fmt.Println(result)
 }
