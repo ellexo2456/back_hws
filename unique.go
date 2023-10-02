@@ -2,7 +2,7 @@ package main
 
 import (
 	"back_hws/unique"
-	"log"
+	"fmt"
 )
 
 func main() {
@@ -10,14 +10,17 @@ func main() {
 
 	input, err := readInput()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Error: ", err)
+		return
 	}
 
 	if input, err = unique.Unique(input, options); err != nil {
-		log.Fatal(err)
+		fmt.Println("Error: ", err)
+		return
 	}
 
 	if err = writeOutput(input); err != nil {
-		log.Fatal(err)
+		fmt.Println("Error: ", err)
+		return
 	}
 }
