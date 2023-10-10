@@ -21,8 +21,7 @@ func RunPipeline(cmds ...cmd) {
 	if len(cmds) == 0 {
 		return
 	}
-	in := make(chan interface{})
-	out := make(chan interface{})
+	in, out := make(chan interface{}), make(chan interface{})
 
 	wg := &sync.WaitGroup{}
 	go runAndClose(cmds[0], in, out, wg)
@@ -66,7 +65,6 @@ func SelectUsers(in, out chan interface{}) {
 }
 
 func callGetMesasges(users []User, out chan interface{}, wg *sync.WaitGroup) {
-	//mu.Lock()
 	if messages, err := GetMessages(users...); err != nil {
 		fmt.Println("Error: ", err)
 		return
@@ -75,7 +73,7 @@ func callGetMesasges(users []User, out chan interface{}, wg *sync.WaitGroup) {
 			out <- msg
 		}
 	}
-	//mu.Unlock()
+
 	wg.Done()
 }
 
@@ -84,7 +82,6 @@ func callGetMesasges(users []User, out chan interface{}, wg *sync.WaitGroup) {
 func SelectMessages(in, out chan interface{}) {
 	wg := &sync.WaitGroup{}
 	var users []User
-	//var mu &sync.Mutex
 
 	for input := range in {
 		users = append(users, input.(User))
@@ -148,7 +145,6 @@ func CombineResults(in, out chan interface{}) {
 	})
 
 	for _, data := range msgsData {
-		s := strconv.FormatBool(data.HasSpam) + " " + strconv.FormatUint(uint64(data.ID), 10)
-		out <- s
+		out <- strconv.FormatBool(data.HasSpam) + " " + strconv.FormatUint(uint64(data.ID), 10)
 	}
 }
