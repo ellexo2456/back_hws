@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"strconv"
@@ -107,57 +108,25 @@ func SelectMessages(in, out chan interface{}) {
 // in - MsgID
 // out - MsgData
 func CheckSpam(in, out chan interface{}) {
-	var workerCount int64
-	var mu sync.Mutex
 	wg := &sync.WaitGroup{}
 
-	//mu.Lock()
-	for input := range in {
-		var flag bool
-		mu.Lock()
-		if workerCount < 5 {
-			flag = true
-		} else {
-			flag = false
-		}
-		mu.Unlock()
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 
-		if flag {
-			mu.Lock()
-			workerCount++
-			mu.Unlock()
-
-			//atomic.AddInt64(&workerCount, 1)
-			wg.Add(1)
-			go func(input interface{}) {
-				defer func() {
-					mu.Lock()
-					workerCount--
-					mu.Unlock()
-					//atomic.AddInt64(&workerCount, -1)
-
-					wg.Done()
-				}()
-
+			for input := range in {
 				if hasSpam, err := HasSpam(input.(MsgID)); err != nil {
 					fmt.Println("Error: ", err)
 					return
 				} else {
 					out <- MsgData{input.(MsgID), hasSpam}
 				}
-
-			}(input)
-
-		}
+			}
+		}()
 	}
 
 	wg.Wait()
-	//mu.Unlock()
-	//
-	//mu.Lock()
-	//for workerCount != 0 {
-	//}
-	//mu.Unlock()
 }
 
 // in - MsgData
@@ -168,15 +137,14 @@ func CombineResults(in, out chan interface{}) {
 		msgsData = append(msgsData, input.(MsgData))
 	}
 
-	slices.SortStableFunc(msgsData, func(a, b MsgData) int {
-		if a.HasSpam {
+	slices.SortFunc(msgsData, func(a, b MsgData) int {
+		if a.HasSpam && !b.HasSpam {
 			return -1
-		}
-		if b.HasSpam {
+		} else if !a.HasSpam && b.HasSpam {
 			return 1
 		}
 
-		return 0
+		return cmp.Compare(a.ID, b.ID)
 	})
 
 	for _, data := range msgsData {
