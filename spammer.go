@@ -21,21 +21,14 @@ func RunPipeline(cmds ...cmd) {
 	}
 	in := make(chan interface{})
 	out := make(chan interface{})
-	//go func(in, out chan interface{}, c cmd) {
-	//	c(in, out)
-	//	defer close(out)
-	//}(in, out, cmds[0])
+
 	wg := &sync.WaitGroup{}
 	go runAndClose(cmds[0], in, out, wg)
 	wg.Add(1)
 
 	for _, c := range cmds[1:] {
 		in = make(chan interface{})
-		//fmt.Println(i)
-		//go func(in, out chan interface{}, c cmd) {
-		//	c(in, out)
-		//	defer close(out)
-		//}(out, in, c)
+
 		go runAndClose(c, out, in, wg)
 		wg.Add(1)
 		out = in
@@ -48,30 +41,50 @@ func RunPipeline(cmds ...cmd) {
 // out - Use
 func SelectUsers(in, out chan interface{}) {
 	var usersID []uint64
+	var mu sync.Mutex
+	wg := &sync.WaitGroup{}
+
 	for input := range in {
-		user := GetUser(input.(string))
-		if !slices.Contains(usersID, user.ID) {
-			usersID = append(usersID, user.ID)
-			out <- user
-		}
+		input := input
+		wg.Add(1)
+
+		go func() {
+			user := GetUser(input.(string))
+			mu.Lock()
+			if !slices.Contains(usersID, user.ID) {
+				usersID = append(usersID, user.ID)
+				out <- user
+			}
+			mu.Unlock()
+			wg.Done()
+		}()
 	}
 
-	//close(out)
+	wg.Wait()
 }
 
 // in - User
 // out - MsgID
 func SelectMessages(in, out chan interface{}) {
+	wg := &sync.WaitGroup{}
+
 	for input := range in {
-		if messages, err := GetMessages(input.(User)); err != nil {
-			fmt.Println("Error: ", err)
-			return
-		} else {
-			for _, msg := range messages {
-				out <- msg
+		input := input
+		wg.Add(1)
+		go func() {
+			if messages, err := GetMessages(input.(User)); err != nil {
+				fmt.Println("Error: ", err)
+				return
+			} else {
+				for _, msg := range messages {
+					out <- msg
+				}
 			}
-		}
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
 }
 
 // in - MsgID
