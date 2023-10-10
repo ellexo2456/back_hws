@@ -1,13 +1,18 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"slices"
+	"sync"
 )
 
-func runAndClose(c cmd, in, out chan interface{}) {
+func runAndClose(c cmd, in, out chan interface{}, waiter *sync.WaitGroup) {
 	c(in, out)
-	defer close(out)
+
+	defer func() {
+		close(out)
+		waiter.Done()
+	}()
 }
 
 func RunPipeline(cmds ...cmd) {
@@ -20,7 +25,9 @@ func RunPipeline(cmds ...cmd) {
 	//	c(in, out)
 	//	defer close(out)
 	//}(in, out, cmds[0])
-	go runAndClose(cmds[0], in, out)
+	wg := &sync.WaitGroup{}
+	go runAndClose(cmds[0], in, out, wg)
+	wg.Add(1)
 
 	for _, c := range cmds[1:] {
 		in = make(chan interface{})
@@ -29,9 +36,12 @@ func RunPipeline(cmds ...cmd) {
 		//	c(in, out)
 		//	defer close(out)
 		//}(out, in, c)
-		go runAndClose(c, out, in)
+		go runAndClose(c, out, in, wg)
+		wg.Add(1)
 		out = in
 	}
+
+	wg.Wait()
 }
 
 // in - string
@@ -54,7 +64,8 @@ func SelectUsers(in, out chan interface{}) {
 func SelectMessages(in, out chan interface{}) {
 	for input := range in {
 		if messages, err := GetMessages(input.(User)); err != nil {
-			log.Fatal(err)
+			fmt.Println("Error: ", err)
+			return
 		} else {
 			for _, msg := range messages {
 				out <- msg
@@ -68,7 +79,8 @@ func SelectMessages(in, out chan interface{}) {
 func CheckSpam(in, out chan interface{}) {
 	for input := range in {
 		if hasSpam, err := HasSpam(input.(MsgID)); err != nil {
-			log.Fatal(err)
+			fmt.Println("Error: ", err)
+			return
 		} else {
 			out <- MsgData{input.(MsgID), hasSpam}
 		}
