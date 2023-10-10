@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"sync"
 )
 
@@ -63,25 +64,41 @@ func SelectUsers(in, out chan interface{}) {
 	wg.Wait()
 }
 
+func callGetMesasges(users []User, out chan interface{}, wg *sync.WaitGroup) {
+	//mu.Lock()
+	if messages, err := GetMessages(users...); err != nil {
+		fmt.Println("Error: ", err)
+		return
+	} else {
+		for _, msg := range messages {
+			out <- msg
+		}
+	}
+	//mu.Unlock()
+	wg.Done()
+}
+
 // in - User
 // out - MsgID
 func SelectMessages(in, out chan interface{}) {
 	wg := &sync.WaitGroup{}
+	var users []User
+	//var mu &sync.Mutex
 
 	for input := range in {
-		input := input
+		users = append(users, input.(User))
+		if len(users) < 2 {
+			continue
+		}
+
 		wg.Add(1)
-		go func() {
-			if messages, err := GetMessages(input.(User)); err != nil {
-				fmt.Println("Error: ", err)
-				return
-			} else {
-				for _, msg := range messages {
-					out <- msg
-				}
-			}
-			wg.Done()
-		}()
+		go callGetMesasges(users, out, wg)
+		users = []User{}
+	}
+
+	if len(users) == 1 {
+		wg.Add(1)
+		go callGetMesasges(users, out, wg)
 	}
 
 	wg.Wait()
@@ -90,14 +107,57 @@ func SelectMessages(in, out chan interface{}) {
 // in - MsgID
 // out - MsgData
 func CheckSpam(in, out chan interface{}) {
+	var workerCount int64
+	var mu sync.Mutex
+	wg := &sync.WaitGroup{}
+
+	//mu.Lock()
 	for input := range in {
-		if hasSpam, err := HasSpam(input.(MsgID)); err != nil {
-			fmt.Println("Error: ", err)
-			return
+		var flag bool
+		mu.Lock()
+		if workerCount < 5 {
+			flag = true
 		} else {
-			out <- MsgData{input.(MsgID), hasSpam}
+			flag = false
+		}
+		mu.Unlock()
+
+		if flag {
+			mu.Lock()
+			workerCount++
+			mu.Unlock()
+
+			//atomic.AddInt64(&workerCount, 1)
+			wg.Add(1)
+			go func(input interface{}) {
+				defer func() {
+					mu.Lock()
+					workerCount--
+					mu.Unlock()
+					//atomic.AddInt64(&workerCount, -1)
+
+					wg.Done()
+				}()
+
+				if hasSpam, err := HasSpam(input.(MsgID)); err != nil {
+					fmt.Println("Error: ", err)
+					return
+				} else {
+					out <- MsgData{input.(MsgID), hasSpam}
+				}
+
+			}(input)
+
 		}
 	}
+
+	wg.Wait()
+	//mu.Unlock()
+	//
+	//mu.Lock()
+	//for workerCount != 0 {
+	//}
+	//mu.Unlock()
 }
 
 // in - MsgData
@@ -108,14 +168,19 @@ func CombineResults(in, out chan interface{}) {
 		msgsData = append(msgsData, input.(MsgData))
 	}
 
-	slices.SortFunc(msgsData, func(a, b MsgData) int {
+	slices.SortStableFunc(msgsData, func(a, b MsgData) int {
 		if a.HasSpam {
-			return 1
+			return -1
 		}
 		if b.HasSpam {
-			return -1
+			return 1
 		}
 
 		return 0
 	})
+
+	for _, data := range msgsData {
+		s := strconv.FormatBool(data.HasSpam) + " " + strconv.FormatUint(uint64(data.ID), 10)
+		out <- s
+	}
 }
