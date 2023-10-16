@@ -9,12 +9,12 @@ import (
 )
 
 func runAndClose(c cmd, in, out chan interface{}, waiter *sync.WaitGroup) {
-	c(in, out)
-
 	defer func() {
 		close(out)
 		waiter.Done()
 	}()
+
+	c(in, out)
 }
 
 func RunPipeline(cmds ...cmd) {
@@ -41,7 +41,7 @@ func RunPipeline(cmds ...cmd) {
 // in - string
 // out - Use
 func SelectUsers(in, out chan interface{}) {
-	var usersID []uint64
+	var usersID = make(map[uint64]string)
 	var mu sync.Mutex
 	wg := &sync.WaitGroup{}
 
@@ -51,13 +51,18 @@ func SelectUsers(in, out chan interface{}) {
 
 		go func() {
 			user := GetUser(input.(string))
+
 			mu.Lock()
-			if !slices.Contains(usersID, user.ID) {
-				usersID = append(usersID, user.ID)
+			defer func() {
+				mu.Unlock()
+				wg.Done()
+			}()
+
+			_, exist := usersID[user.ID]
+			if !exist {
+				usersID[user.ID] = user.Email
 				out <- user
 			}
-			mu.Unlock()
-			wg.Done()
 		}()
 	}
 
@@ -65,16 +70,17 @@ func SelectUsers(in, out chan interface{}) {
 }
 
 func callGetMesasges(users []User, out chan interface{}, wg *sync.WaitGroup) {
-	if messages, err := GetMessages(users...); err != nil {
+	defer wg.Done()
+
+	messages, err := GetMessages(users...)
+	if err != nil {
 		fmt.Println("Error: ", err)
 		return
-	} else {
-		for _, msg := range messages {
-			out <- msg
-		}
 	}
 
-	wg.Done()
+	for _, msg := range messages {
+		out <- msg
+	}
 }
 
 // in - User
@@ -82,10 +88,12 @@ func callGetMesasges(users []User, out chan interface{}, wg *sync.WaitGroup) {
 func SelectMessages(in, out chan interface{}) {
 	wg := &sync.WaitGroup{}
 	var users []User
+	const UsersBatchLen = 2
+	const UsersWithoutBatchLen = 1
 
 	for input := range in {
 		users = append(users, input.(User))
-		if len(users) < 2 {
+		if len(users) < UsersBatchLen {
 			continue
 		}
 
@@ -94,7 +102,7 @@ func SelectMessages(in, out chan interface{}) {
 		users = []User{}
 	}
 
-	if len(users) == 1 {
+	if len(users) == UsersWithoutBatchLen {
 		wg.Add(1)
 		go callGetMesasges(users, out, wg)
 	}
@@ -106,19 +114,21 @@ func SelectMessages(in, out chan interface{}) {
 // out - MsgData
 func CheckSpam(in, out chan interface{}) {
 	wg := &sync.WaitGroup{}
+	const workersCount = 5
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < workersCount; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 
 			for input := range in {
-				if hasSpam, err := HasSpam(input.(MsgID)); err != nil {
+				hasSpam, err := HasSpam(input.(MsgID))
+				if err != nil {
 					fmt.Println("Error: ", err)
-					return
-				} else {
-					out <- MsgData{input.(MsgID), hasSpam}
+					continue
 				}
+
+				out <- MsgData{input.(MsgID), hasSpam}
 			}
 		}()
 	}
