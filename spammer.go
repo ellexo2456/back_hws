@@ -50,13 +50,17 @@ func SelectUsers(in, out chan interface{}) {
 		wg.Add(1)
 
 		go func() {
-			user := GetUser(input.(string))
+			defer wg.Done()
+
+			email, ok := input.(string)
+			if !ok {
+				fmt.Println("Error: incorrect input")
+				return
+			}
+			user := GetUser(email)
 
 			mu.Lock()
-			defer func() {
-				mu.Unlock()
-				wg.Done()
-			}()
+			defer mu.Unlock()
 
 			_, exist := usersID[user.ID]
 			if !exist {
@@ -69,7 +73,7 @@ func SelectUsers(in, out chan interface{}) {
 	wg.Wait()
 }
 
-func callGetMesasges(users []User, out chan interface{}, wg *sync.WaitGroup) {
+func callGetMessages(users []User, out chan interface{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	messages, err := GetMessages(users...)
@@ -92,19 +96,25 @@ func SelectMessages(in, out chan interface{}) {
 	const UsersWithoutBatchLen = 1
 
 	for input := range in {
-		users = append(users, input.(User))
+		user, ok := input.(User)
+		if !ok {
+			fmt.Println("Error: incorrect input")
+			return
+		}
+
+		users = append(users, user)
 		if len(users) < UsersBatchLen {
 			continue
 		}
 
 		wg.Add(1)
-		go callGetMesasges(users, out, wg)
+		go callGetMessages(users, out, wg)
 		users = []User{}
 	}
 
 	if len(users) == UsersWithoutBatchLen {
 		wg.Add(1)
-		go callGetMesasges(users, out, wg)
+		go callGetMessages(users, out, wg)
 	}
 
 	wg.Wait()
@@ -122,7 +132,13 @@ func CheckSpam(in, out chan interface{}) {
 			defer wg.Done()
 
 			for input := range in {
-				hasSpam, err := HasSpam(input.(MsgID))
+				msgID, ok := input.(MsgID)
+				if !ok {
+					fmt.Println("Error: incorrect input")
+					continue
+				}
+
+				hasSpam, err := HasSpam(msgID)
 				if err != nil {
 					fmt.Println("Error: ", err)
 					continue
@@ -141,7 +157,13 @@ func CheckSpam(in, out chan interface{}) {
 func CombineResults(in, out chan interface{}) {
 	var msgsData []MsgData
 	for input := range in {
-		msgsData = append(msgsData, input.(MsgData))
+		msgData, ok := input.(MsgData)
+		if !ok {
+			fmt.Println("Error: incorrect input")
+			return
+		}
+
+		msgsData = append(msgsData, msgData)
 	}
 
 	slices.SortFunc(msgsData, func(a, b MsgData) int {
